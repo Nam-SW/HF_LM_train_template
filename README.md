@@ -12,8 +12,6 @@ root
     └── utils.py
 ```
 
-wandb 사용이 가능합니다를 사용합니다
-
 dataloader.py의 load 함수 내부, `== user define ==` 로 표시된 영역 내부를 자신의 데이터에 맞게 수정하셔야 합니다.  
 `training_cfg.yaml`는 입맛에 맛게 수정하시면 됩니다.  
 wandb 사용이 가능합니다. 사용하지 않으려면 trainingargs에서 report_to, run_name을 지워주세요.  
