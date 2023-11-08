@@ -1,0 +1,32 @@
+MODELS:
+    service_name: hf-template-serve
+
+RUNNER:
+    cfg:
+        pretrained_model_name_or_path: model
+        use_cache: False
+        torch_dtype: bfloat16
+        device_map: auto
+        # load_in_4bit: True
+
+    default_generate_args:
+        max_new_tokens: 512
+        do_sample: True
+        penalty_alpha: 0.5
+        top_k: 10
+    
+    batch_size: 4
+    default_seed: 42
+
+# remove hydra logger
+hydra:
+    run:
+        dir: .
+    job:
+        chdir: false
+    output_subdir: null
+
+defaults:
+    - _self_
+    - override hydra/hydra_logging: disabled
+    - override hydra/job_logging: disabled
