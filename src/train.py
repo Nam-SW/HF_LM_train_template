@@ -23,11 +23,7 @@ def main(cfg):
     train_dataset, eval_dataset = load(tokenizer=tokenizer, **cfg.DATA.dataset)
 
     args_cls = Seq2SeqTrainingArguments if is_seq2seq(model) else TrainingArguments
-    args = args_cls(
-        do_train=True,
-        do_eval=eval_dataset is not None,
-        **cfg.TRAININGARGS,
-    )
+    args = args_cls(**cfg.TRAININGARGS)
 
     if is_seq2seq(model):  # seq2seq
         collator = DataCollatorForSeq2Seq(tokenizer, model, **cfg.DATA.collator)

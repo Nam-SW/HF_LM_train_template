@@ -9,7 +9,6 @@ from peft import (
     PeftConfig,
     PeftModel,
     get_peft_model,
-    prepare_model_for_kbit_training,
 )
 from transformers import (
     AutoConfig,
@@ -20,7 +19,7 @@ from transformers import (
     Pipeline,
     PretrainedConfig,
     PreTrainedModel,
-    PreTrainedTokenizer,
+    PreTrainedTokenizerBase,
     Text2TextGenerationPipeline,
     TextGenerationPipeline,
 )
@@ -31,11 +30,13 @@ def set_seed(seed: int):
     torch.manual_seed(seed)
 
 
-def is_seq2seq(inputs: Union[PreTrainedModel, PretrainedConfig]) -> bool:
+def is_seq2seq(inputs: Union[PreTrainedModel, PretrainedConfig, PreTrainedTokenizerBase]) -> bool:
     """
     return: bool
             true is Seq2Seq Model, false is Causal LM
     """
+    if isinstance(inputs, PreTrainedTokenizerBase):
+        inputs = AutoConfig.from_pretrained(inputs.name_or_path).config
 
     if hasattr(inputs, "config"):
         inputs = inputs.config
@@ -67,7 +68,7 @@ def prepare_model_conf(cfg: OmegaConf) -> Dict:
 
 def load_model_and_tokenizer(
     cfg: OmegaConf,
-) -> Tuple[PreTrainedModel, PreTrainedTokenizer]:
+) -> Tuple[PreTrainedModel, PreTrainedTokenizerBase]:
     tokenizer = AutoTokenizer.from_pretrained(**cfg.tokenizer)
 
     model_cfg = AutoConfig.from_pretrained(cfg.model.pretrained_model_name_or_path)
