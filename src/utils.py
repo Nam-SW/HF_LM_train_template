@@ -56,6 +56,9 @@ def prepare_model_conf(cfg: OmegaConf) -> Dict:
     if cfg.get("torch_dtype") is not None:
         cfg["torch_dtype"] = getattr(torch, cfg["torch_dtype"])
 
+    if cfg.get("device_map") == "local_rank":
+        cfg["device_map"] = int(os.environ.get("LOCAL_RANK", 0))
+
     if "quantization_config" in cfg:
         quant_config = cfg["quantization_config"]
         if "compute_dtype" in quant_config:
@@ -75,10 +78,6 @@ def load_model_and_tokenizer(
     model_cls = AutoModelForSeq2SeqLM if is_seq2seq(model_cfg) else AutoModelForCausalLM
     model = model_cls.from_pretrained(**prepare_model_conf(cfg.model))
 
-    # # quantization
-    # if "quantization_config" in cfg.model:
-    #     model = prepare_model_for_kbit_training(model)
-
     # lora
     lora_cfg = cfg.get("lora_config")
     if lora_cfg is not None:  # lora
@@ -92,18 +91,24 @@ def load_model_and_tokenizer(
 
 
 def load_pipeline(cfg: OmegaConf) -> Pipeline:
-    tokenizer = AutoTokenizer.from_pretrained(cfg.pretrained_model_name_or_path)
-
-    is_lora = not os.path.isfile(os.path.join(cfg.pretrained_model_name_or_path, "config.json"))
-
-    if is_lora:
+    is_lora = False
+    try:  # peft 먼저 검색
         peft_cfg = PeftConfig.from_pretrained(cfg.pretrained_model_name_or_path)
         adapter_path = cfg.pretrained_model_name_or_path
         cfg.pretrained_model_name_or_path = peft_cfg.base_model_name_or_path
+        is_lora = True
+    except:
+        pass
 
-    model_cfg = AutoConfig.from_pretrained(cfg.pretrained_model_name_or_path)
+    try:  # transformers에서 검색
+        model_cfg = AutoConfig.from_pretrained(cfg.pretrained_model_name_or_path)
+    except Exception as e:
+        raise e
+
     model_cls = AutoModelForSeq2SeqLM if is_seq2seq(model_cfg) else AutoModelForCausalLM
     model = model_cls.from_pretrained(**prepare_model_conf(cfg))
+
+    tokenizer = AutoTokenizer.from_pretrained(cfg.pretrained_model_name_or_path)
 
     if is_lora:
         model = PeftModel.from_pretrained(model, adapter_path)
