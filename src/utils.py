@@ -1,5 +1,6 @@
 import os
 import random as rd
+from datetime import datetime as dt
 from typing import Dict, Tuple, Union
 
 import torch
@@ -22,6 +23,7 @@ from transformers import (
     PreTrainedTokenizerBase,
     Text2TextGenerationPipeline,
     TextGenerationPipeline,
+    Trainer,
 )
 
 
@@ -36,7 +38,7 @@ def is_seq2seq(inputs: Union[PreTrainedModel, PretrainedConfig, PreTrainedTokeni
             true is Seq2Seq Model, false is Causal LM
     """
     if isinstance(inputs, PreTrainedTokenizerBase):
-        inputs = AutoConfig.from_pretrained(inputs.name_or_path).config
+        inputs = AutoConfig.from_pretrained(inputs.name_or_path)
 
     if hasattr(inputs, "config"):
         inputs = inputs.config
@@ -117,3 +119,11 @@ def load_pipeline(cfg: OmegaConf) -> Pipeline:
     pipe = pipeline_cls(model=model, tokenizer=tokenizer)
 
     return pipe
+
+
+class TimeChecker:
+    def __enter__(self):
+        self.start = dt.now()
+
+    def __exit__(self, exc_type, exc_value, traceback):
+        print(f"time taken: {(dt.now() - self.start).total_seconds()}sec")
