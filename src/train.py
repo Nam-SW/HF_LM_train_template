@@ -41,7 +41,7 @@ def main(cfg):
     )
     trainer.train()
 
-    trainer.save_model("model/")
+    trainer.save_model("../model/")
 
 
 if __name__ == "__main__":
