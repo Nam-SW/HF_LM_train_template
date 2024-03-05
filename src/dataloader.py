@@ -68,12 +68,7 @@ def load(
 
     if train_test_split is not None:
         assert 0.0 < train_test_split < 1.0, "train_test_split must be a value between 0 and 1"
-        data = data["train"].train_test_split(train_size=train_test_split)
-        # train_test_split = int(train_test_split * 100)
-        # train_test_split = {
-        #     "train": f"train[:{train_test_split}%]",
-        #     "test": f"train[{train_test_split}%:]",
-        # }
+        data = data["train"].train_test_split(train_size=train_test_split, shuffle=False)
         is_eval = True
 
     return (data["train"], data["test"] if is_eval else None)
